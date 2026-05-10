@@ -1,0 +1,30 @@
+name: flutter_debloater
+description: A professional Android debloater app using Shizuku API.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  shimmer: ^3.0.0
+  animations: ^2.0.11
+  flutter_animate: ^4.5.0
+  lottie: ^3.1.2
+  percent_indicator: ^4.2.3
+  cached_network_image: ^3.3.1
+  shared_preferences: ^2.2.3
+  flutter_svg: ^2.0.10+1
+  package_info_plus: ^8.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/

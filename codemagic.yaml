@@ -1,0 +1,92 @@
+workflows:
+  android-release:
+    name: Android Release Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        - keystore_credentials    # optional — for signed builds (see below)
+
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> android/local.properties
+
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Analyze code
+        script: flutter analyze --no-fatal-infos
+        ignore_failure: true
+
+      - name: Build debug APK
+        script: |
+          flutter build apk --debug \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER
+
+      - name: Build release APK (unsigned)
+        script: |
+          flutter build apk --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER \
+            --split-per-abi
+
+    artifacts:
+      - build/app/outputs/flutter-apk/**/*.apk
+      - build/app/outputs/bundle/**/*.aab
+      - flutter_analyze.log
+
+    publishing:
+      email:
+        recipients:
+          - your@email.com          # ← replace with your email
+        notify:
+          success: true
+          failure: true
+
+# ─── HOW TO USE ──────────────────────────────────────────────────────────────
+#
+# 1. Go to https://codemagic.io and sign in with GitHub
+# 2. Click "Add application" → select RnzeDebloatera
+# 3. Choose "Other" as the project type (uses this codemagic.yaml automatically)
+# 4. Click "Start build" on the android-release workflow
+#
+# Your APK will be available in the Artifacts section after the build finishes.
+# Codemagic emails you a download link automatically.
+#
+# ─── SIGNED RELEASE (optional) ───────────────────────────────────────────────
+#
+# To produce a signed APK for Play Store / direct distribution:
+# 1. In Codemagic → your app → Environment variables → add a group "keystore_credentials"
+# 2. Add these variables to the group:
+#      CM_KEYSTORE         — base64 of your .jks file
+#      CM_KEYSTORE_PASSWORD
+#      CM_KEY_ALIAS
+#      CM_KEY_PASSWORD
+# 3. Replace the "Build release APK (unsigned)" step above with:
+#
+#   - name: Build signed release APK
+#     script: |
+#       echo $CM_KEYSTORE | base64 --decode > android/app/keystore.jks
+#       flutter build apk --release \
+#         --build-name=1.0.0 \
+#         --build-number=$BUILD_NUMBER \
+#         --split-per-abi
+#     environment:
+#       vars:
+#         KEY_STORE_PATH: android/app/keystore.jks
+#
+# ─────────────────────────────────────────────────────────────────────────────
